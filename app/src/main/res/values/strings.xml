@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">喷绘上传</string>
+    <string name="hint_server_ip">地面站IP地址</string>
+    <string name="hint_server_port">端口 (默认9527)</string>
+    <string name="hint_wall_width">墙面宽度 (米)</string>
+    <string name="hint_wall_height">墙面高度 (米)</string>
+    <string name="btn_pick_image">选择图片</string>
+    <string name="btn_take_photo">拍照</string>
+    <string name="btn_upload">上传到地面站</string>
+    <string name="status_idle">就绪</string>
+    <string name="status_connecting">正在连接…</string>
+    <string name="status_sending">正在发送…</string>
+    <string name="status_success">上传成功</string>
+    <string name="status_failed">上传失败</string>
+    <string name="no_image_selected">请先选择图片</string>
+    <string name="invalid_params">请填写完整参数</string>
+    <string name="default_port">9527</string>
+    <string name="image_preview">图片预览</string>
+    <string name="connection_settings">连接设置</string>
+    <string name="wall_dimensions">墙面尺寸</string>
+</resources>

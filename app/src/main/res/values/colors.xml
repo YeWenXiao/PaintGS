@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Apple Dark Mode palette (matching GCS) -->
+    <color name="bg0">#FF000000</color>
+    <color name="bg1">#FF1C1C1E</color>
+    <color name="bg2">#FF2C2C2E</color>
+    <color name="sep">#FF38383A</color>
+    <color name="label1">#FFFFFFFF</color>
+    <color name="label2">#FF8E8E93</color>
+    <color name="blue">#FF0A84FF</color>
+    <color name="green">#FF30D158</color>
+    <color name="red">#FFFF453A</color>
+    <color name="orange">#FFFF9F0A</color>
+
+    <color name="card_bg">#FF2C2C2E</color>
+    <color name="input_bg">#FF3A3A3C</color>
+    <color name="btn_primary">#FF0A84FF</color>
+    <color name="btn_secondary">#FF48484A</color>
+    <color name="status_bar">#FF000000</color>
+    <color name="nav_bar">#FF000000</color>
+</resources>

@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg0"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- 标题 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="喷绘上传"
+            android:textColor="@color/label1"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="将喷绘图像发送到地面站"
+            android:textColor="@color/label2"
+            android:textSize="14sp"
+            android:layout_marginBottom="20dp" />
+
+        <!-- 状态指示器 -->
+        <LinearLayout
+            android:id="@+id/statusBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_status_bar"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:layout_marginBottom="20dp">
+
+            <View
+                android:id="@+id/statusDot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="@drawable/bg_btn_primary"
+                android:layout_marginEnd="10dp" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/status_idle"
+                android:textColor="@color/label2"
+                android:textSize="13sp" />
+
+            <ProgressBar
+                android:id="@+id/progressSmall"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:visibility="gone"
+                android:indeterminateTint="@color/blue" />
+        </LinearLayout>
+
+        <!-- 连接设置卡片 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/connection_settings"
+                android:textColor="@color/label1"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etServerIp"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="2"
+                    android:background="@drawable/bg_input"
+                    android:hint="@string/hint_server_ip"
+                    android:inputType="text"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="@color/label1"
+                    android:textColorHint="@color/label2"
+                    android:textSize="14sp"
+                    android:layout_marginEnd="8dp"
+                    android:importantForAutofill="no" />
+
+                <EditText
+                    android:id="@+id/etServerPort"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_input"
+                    android:hint="@string/hint_server_port"
+                    android:inputType="number"
+                    android:paddingHorizontal="14dp"
+                    android:text="@string/default_port"
+                    android:textColor="@color/label1"
+                    android:textColorHint="@color/label2"
+                    android:textSize="14sp"
+                    android:importantForAutofill="no" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 墙面尺寸卡片 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/wall_dimensions"
+                android:textColor="@color/label1"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etWallWidth"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_input"
+                    android:hint="@string/hint_wall_width"
+                    android:inputType="numberDecimal"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="@color/label1"
+                    android:textColorHint="@color/label2"
+                    android:textSize="14sp"
+                    android:layout_marginEnd="8dp"
+                    android:importantForAutofill="no" />
+
+                <EditText
+                    android:id="@+id/etWallHeight"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_input"
+                    android:hint="@string/hint_wall_height"
+                    android:inputType="numberDecimal"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="@color/label1"
+                    android:textColorHint="@color/label2"
+                    android:textSize="14sp"
+                    android:importantForAutofill="no" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 图片预览卡片 -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:background="@drawable/bg_image_placeholder"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:id="@+id/ivPreview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:contentDescription="@string/image_preview"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/placeholderGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📷"
+                    android:textSize="40sp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="点击下方按钮选择图片"
+                    android:textColor="@color/label2"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- 图片信息标签 -->
+            <TextView
+                android:id="@+id/tvImageInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="8dp"
+                android:background="@drawable/bg_card"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:textColor="@color/label2"
+                android:textSize="11sp"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <!-- 图片选择按钮 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/btnPickImage"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_btn_secondary"
+                android:gravity="center"
+                android:text="@string/btn_pick_image"
+                android:textColor="@color/label1"
+                android:textSize="15sp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/btnTakePhoto"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_btn_secondary"
+                android:gravity="center"
+                android:text="@string/btn_take_photo"
+                android:textColor="@color/label1"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <!-- 上传进度条 -->
+        <ProgressBar
+            android:id="@+id/progressUpload"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:layout_marginBottom="12dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/blue"
+            android:progressBackgroundTint="@color/sep"
+            android:visibility="gone" />
+
+        <!-- 上传按钮 -->
+        <TextView
+            android:id="@+id/btnUpload"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_btn_primary"
+            android:gravity="center"
+            android:text="@string/btn_upload"
+            android:textColor="@color/label1"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</ScrollView>

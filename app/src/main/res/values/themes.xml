@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SprayUploader" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/blue</item>
+        <item name="colorPrimaryVariant">@color/blue</item>
+        <item name="colorOnPrimary">@color/label1</item>
+        <item name="colorSecondary">@color/green</item>
+        <item name="colorOnSecondary">@color/label1</item>
+        <item name="android:colorBackground">@color/bg0</item>
+        <item name="colorSurface">@color/bg1</item>
+        <item name="colorOnSurface">@color/label1</item>
+        <item name="android:statusBarColor">@color/status_bar</item>
+        <item name="android:navigationBarColor">@color/nav_bar</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

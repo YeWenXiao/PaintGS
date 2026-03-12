@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 允许局域网明文TCP连接到地面站 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.144.1</domain>
+        <domain includeSubdomains="true">10.0.0.0</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
