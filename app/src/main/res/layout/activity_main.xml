@@ -45,7 +45,7 @@
                 android:id="@+id/statusDot"
                 android:layout_width="10dp"
                 android:layout_height="10dp"
-                android:background="@drawable/bg_btn_primary"
+                android:background="@drawable/status_dot"
                 android:layout_marginEnd="10dp" />
 
             <TextView
@@ -119,6 +119,18 @@
                     android:textSize="14sp"
                     android:importantForAutofill="no" />
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnTestConnection"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_btn_secondary"
+                android:gravity="center"
+                android:text="测试连接"
+                android:textColor="@color/label2"
+                android:textSize="13sp" />
+
         </LinearLayout>
 
         <!-- 墙面尺寸卡片 -->
@@ -173,6 +185,16 @@
                     android:textSize="14sp"
                     android:importantForAutofill="no" />
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvRatioHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/label2"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
         </LinearLayout>
 
         <!-- 图片预览卡片 -->

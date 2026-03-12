@@ -1,16 +1,17 @@
 package com.spray.uploader.ui
 
 import android.Manifest
-import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -76,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         prefs = getSharedPreferences("spray_uploader", MODE_PRIVATE)
         restoreFields()
         setupClickListeners()
+        setupTextWatchers()
         observeViewModel()
     }
 
@@ -133,6 +135,16 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnUpload.setOnClickListener {
             performUpload()
+        }
+
+        binding.btnTestConnection.setOnClickListener {
+            val ip = binding.etServerIp.text.toString().trim()
+            val port = binding.etServerPort.text.toString().trim().toIntOrNull() ?: 9527
+            if (ip.isEmpty()) {
+                Toast.makeText(this, "请输入IP地址", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            viewModel.testConnection(ip, port)
         }
     }
 
@@ -197,6 +209,50 @@ class MainActivity : AppCompatActivity() {
         viewModel.upload(config)
     }
 
+    private fun setupTextWatchers() {
+        val watcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) { updateRatioHint() }
+        }
+        binding.etWallWidth.addTextChangedListener(watcher)
+        binding.etWallHeight.addTextChangedListener(watcher)
+    }
+
+    private fun updateRatioHint() {
+        val widthStr = binding.etWallWidth.text.toString().trim()
+        val heightStr = binding.etWallHeight.text.toString().trim()
+        val wallW = widthStr.toDoubleOrNull()
+        val wallH = heightStr.toDoubleOrNull()
+        val info = viewModel.imageInfo.value
+
+        if (wallW != null && wallW > 0 && wallH != null && wallH > 0 && info.contains("×")) {
+            // 从imageInfo解析图片尺寸（格式："1920×1080  1234KB"）
+            val dims = info.split("×", " ").take(2)
+            val imgW = dims.getOrNull(0)?.toIntOrNull()
+            val imgH = dims.getOrNull(1)?.toIntOrNull()
+            if (imgW != null && imgW > 0 && imgH != null && imgH > 0) {
+                val wallRatio = wallW / wallH
+                val imgRatio = imgW.toDouble() / imgH.toDouble()
+                val diff = kotlin.math.abs(wallRatio - imgRatio) / wallRatio * 100
+
+                binding.tvRatioHint.visibility = View.VISIBLE
+                if (diff < 5) {
+                    binding.tvRatioHint.text = "图片比例与墙面匹配良好"
+                    binding.tvRatioHint.setTextColor(0xFF30D158.toInt())
+                } else {
+                    binding.tvRatioHint.text = String.format(
+                        "图片比例 %.2f:1  墙面比例 %.2f:1  (偏差%.0f%%，图像会被拉伸)",
+                        imgRatio, wallRatio, diff
+                    )
+                    binding.tvRatioHint.setTextColor(0xFFFF9F0A.toInt())
+                }
+                return
+            }
+        }
+        binding.tvRatioHint.visibility = View.GONE
+    }
+
     private fun observeViewModel() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -221,6 +277,7 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             binding.tvImageInfo.visibility = View.GONE
                         }
+                        updateRatioHint()
                     }
                 }
 
@@ -229,12 +286,20 @@ class MainActivity : AppCompatActivity() {
                         updateUiForState(state)
                     }
                 }
+
+                launch {
+                    viewModel.connectionTestResult.collect { result ->
+                        if (result != null) {
+                            Toast.makeText(this@MainActivity, result, Toast.LENGTH_SHORT).show()
+                            viewModel.clearTestResult()
+                        }
+                    }
+                }
             }
         }
     }
 
     private fun updateUiForState(state: UploadState) {
-        val statusDot = binding.statusDot.background
         when (state) {
             is UploadState.Idle -> {
                 binding.tvStatus.text = getString(R.string.status_idle)
@@ -274,6 +339,7 @@ class MainActivity : AppCompatActivity() {
                 binding.btnUpload.isEnabled = true
                 binding.btnUpload.alpha = 1.0f
                 Toast.makeText(this, "上传成功！", Toast.LENGTH_SHORT).show()
+                vibrateSuccess()
             }
 
             is UploadState.Failed -> {
@@ -285,6 +351,21 @@ class MainActivity : AppCompatActivity() {
                 binding.btnUpload.alpha = 1.0f
             }
         }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun vibrateSuccess() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vm = getSystemService(VibratorManager::class.java)
+                vm?.defaultVibrator?.vibrate(
+                    VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)
+                )
+            } else {
+                val v = getSystemService(VIBRATOR_SERVICE) as? Vibrator
+                v?.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+            }
+        } catch (_: Exception) { }
     }
 
     private fun setDotColor(color: Int) {

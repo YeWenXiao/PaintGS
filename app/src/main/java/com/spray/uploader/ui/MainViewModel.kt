@@ -3,7 +3,9 @@ package com.spray.uploader.ui
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.spray.uploader.model.UploadConfig
@@ -15,7 +17,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.net.InetSocketAddress
+import java.net.Socket
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -28,6 +33,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _imageInfo = MutableStateFlow("")
     val imageInfo: StateFlow<String> = _imageInfo.asStateFlow()
 
+    private val _connectionTestResult = MutableStateFlow<String?>(null)
+    val connectionTestResult: StateFlow<String?> = _connectionTestResult.asStateFlow()
+
     private var imageBytes: ByteArray? = null
 
     fun loadImageFromUri(uri: Uri) {
@@ -36,45 +44,73 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val context = getApplication<Application>()
                 val inputStream = context.contentResolver.openInputStream(uri) ?: return@launch
 
-                // 先读取原始字节
                 val rawBytes = inputStream.readBytes()
                 inputStream.close()
 
-                // 解码为Bitmap用于预览
-                val options = BitmapFactory.Options().apply {
-                    inJustDecodeBounds = true
-                }
-                BitmapFactory.decodeByteArray(rawBytes, 0, rawBytes.size, options)
-                val origW = options.outWidth
-                val origH = options.outHeight
+                // 检测EXIF旋转
+                val rotation = try {
+                    val exif = ExifInterface(ByteArrayInputStream(rawBytes))
+                    when (exif.getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_NORMAL
+                    )) {
+                        ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                        ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                        ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                        else -> 0f
+                    }
+                } catch (_: Exception) { 0f }
 
-                // 计算采样率（预览用，不超过1920px）
+                // 获取原始尺寸
+                val boundsOpts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(rawBytes, 0, rawBytes.size, boundsOpts)
+                val origW = boundsOpts.outWidth
+                val origH = boundsOpts.outHeight
+
+                // 预览采样（不超过1920px）
                 val maxDim = maxOf(origW, origH)
                 var sampleSize = 1
                 while (maxDim / sampleSize > 1920) sampleSize *= 2
 
-                val decodeOpts = BitmapFactory.Options().apply {
-                    inSampleSize = sampleSize
-                }
-                val bitmap = BitmapFactory.decodeByteArray(rawBytes, 0, rawBytes.size, decodeOpts)
+                val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+                var bitmap = BitmapFactory.decodeByteArray(rawBytes, 0, rawBytes.size, decodeOpts)
 
-                // 重新编码为JPEG用于传输（质量90）
-                val baos = ByteArrayOutputStream()
-                // 如果原图是JPEG且不太大，直接用原始字节
-                if (rawBytes.size <= 20 * 1024 * 1024 &&
+                // 应用EXIF旋转
+                if (rotation != 0f && bitmap != null) {
+                    val matrix = Matrix().apply { postRotate(rotation) }
+                    val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                    if (rotated !== bitmap) bitmap.recycle()
+                    bitmap = rotated
+                }
+
+                // 判断原图是否为JPEG且在20MB以内
+                val isJpeg = rawBytes.size >= 2 &&
                     (rawBytes[0].toInt() and 0xFF == 0xFF) &&
-                    (rawBytes[1].toInt() and 0xFF == 0xD8)) {
+                    (rawBytes[1].toInt() and 0xFF == 0xD8)
+
+                if (isJpeg && rawBytes.size <= 20 * 1024 * 1024) {
                     imageBytes = rawBytes
                 } else {
-                    // 非JPEG或过大，重新编码
+                    // 重新编码
                     val fullBitmap = BitmapFactory.decodeByteArray(rawBytes, 0, rawBytes.size)
-                    fullBitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
-                    imageBytes = baos.toByteArray()
-                    if (fullBitmap !== bitmap) fullBitmap.recycle()
+                    if (fullBitmap != null) {
+                        var toEncode = fullBitmap
+                        if (rotation != 0f) {
+                            val m = Matrix().apply { postRotate(rotation) }
+                            toEncode = Bitmap.createBitmap(fullBitmap, 0, 0, fullBitmap.width, fullBitmap.height, m, true)
+                            if (toEncode !== fullBitmap) fullBitmap.recycle()
+                        }
+                        val baos = ByteArrayOutputStream()
+                        toEncode.compress(Bitmap.CompressFormat.JPEG, 90, baos)
+                        imageBytes = baos.toByteArray()
+                        if (toEncode !== bitmap) toEncode.recycle()
+                    }
                 }
 
                 val sizeKb = (imageBytes?.size ?: 0) / 1024
-                _imageInfo.value = "${origW}×${origH}  ${sizeKb}KB"
+                val displayW = if (rotation == 90f || rotation == 270f) origH else origW
+                val displayH = if (rotation == 90f || rotation == 270f) origW else origH
+                _imageInfo.value = "${displayW}×${displayH}  ${sizeKb}KB"
                 _selectedBitmap.value = bitmap
 
             } catch (e: Exception) {
@@ -97,6 +133,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _uploadState.value = UploadState.Failed("图片处理失败: ${e.message}")
             }
         }
+    }
+
+    fun testConnection(host: String, port: Int) {
+        viewModelScope.launch {
+            _connectionTestResult.value = "正在测试..."
+            try {
+                withContext(Dispatchers.IO) {
+                    val socket = Socket()
+                    try {
+                        socket.connect(InetSocketAddress(host, port), 3000)
+                        _connectionTestResult.value = "连接成功！地面站在线"
+                    } finally {
+                        socket.close()
+                    }
+                }
+            } catch (e: Exception) {
+                _connectionTestResult.value = when {
+                    e.message?.contains("refused") == true -> "连接被拒绝（地面站未启动？）"
+                    e.message?.contains("timeout") == true -> "连接超时（IP错误？）"
+                    else -> "连接失败: ${e.message}"
+                }
+            }
+        }
+    }
+
+    fun clearTestResult() {
+        _connectionTestResult.value = null
     }
 
     fun upload(config: UploadConfig) {
